@@ -1,6 +1,7 @@
 resource "aws_instance" "telegram_bot" {
   ami           = "ami-0c101f26f147fa7fd" # Amazon Linux 2023 (HVM)
   instance_type = "t3.micro"
+  key_name      = "chakra-cct"
 
   tags = {
     Name = "${var.project_name}-telegram-bot"
