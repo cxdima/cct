@@ -1,0 +1,19 @@
+# Terraform state files
+terraform.tfstate
+terraform.tfstate.backup
+*.tfstate
+
+# Python virtual envs and packages
+venv/
+__pycache__/
+*.pyc
+
+# Node modules or other dependencies (if any)
+node_modules/
+
+# IDE files
+.vscode/
+.DS_Store
+
+# Logs
+*.log
