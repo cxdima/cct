@@ -10,19 +10,48 @@ resource "aws_iam_role" "lambda_exec_role" {
   })
 }
 
+resource "aws_iam_policy" "lambda_dynamodb_read" {
+  name        = "${var.project_name}-lambda-dynamodb-read-policy"
+  description = "Allow Lambda to read from DynamoDB telegram_users table"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect   = "Allow",
+      Action   = [
+        "dynamodb:GetItem",
+        "dynamodb:Query",
+        "dynamodb:Scan"
+      ],
+      Resource = aws_dynamodb_table.telegram_users.arn
+    }]
+  })
+}
+
 resource "aws_iam_policy_attachment" "lambda_basic_execution" {
-  name       = "${var.project_name}-lambda-policy"
+  name       = "${var.project_name}-lambda-basic-execution"
   roles      = [aws_iam_role.lambda_exec_role.name]
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_iam_policy_attachment" "lambda_dynamodb_read_attach" {
+  name       = "${var.project_name}-lambda-dynamodb-read-attach"
+  roles      = [aws_iam_role.lambda_exec_role.name]
+  policy_arn = aws_iam_policy.lambda_dynamodb_read.arn
 }
 
 resource "aws_lambda_function" "handler" {
   function_name    = "${var.project_name}-lambda"
   runtime          = "python3.11"
-  handler          = "ambda_function.lambda_handler"
+  handler          = "lambda_function.lambda_handler"
   role             = aws_iam_role.lambda_exec_role.arn
-  filename         = "function.zip" # Upload before applying
+  filename         = "function.zip" # Upload this ZIP file before apply
   source_code_hash = filebase64sha256("function.zip")
+
+  environment {
+    variables = {
+      DDB_TABLE = aws_dynamodb_table.telegram_users.name
+    }
+  }
 }
 
 resource "aws_apigatewayv2_api" "api" {
@@ -57,4 +86,3 @@ resource "aws_lambda_permission" "apigw" {
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.api.execution_arn}/*/*"
 }
-
