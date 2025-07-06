@@ -1,88 +1,83 @@
-resource "aws_iam_role" "lambda_exec_role" {
-  name = "${var.project_name}-lambda-role"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Action    = "sts:AssumeRole",
-      Effect    = "Allow",
-      Principal = { Service = "lambda.amazonaws.com" }
-    }]
-  })
+data "aws_caller_identity" "current" {}
+
+# 1) BOT Dependencies Layer
+resource "aws_lambda_layer_version" "telegram_bot_deps" {
+  filename            = "telegram_bot_layer.zip"
+  layer_name          = "${var.project_name}-telegram-bot-deps"
+  compatible_runtimes = ["python3.11"]
 }
 
-resource "aws_iam_policy" "lambda_dynamodb_read" {
-  name        = "${var.project_name}-lambda-dynamodb-read-policy"
-  description = "Allow Lambda to read from DynamoDB telegram_users table"
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Effect   = "Allow",
-      Action   = [
-        "dynamodb:GetItem",
-        "dynamodb:Query",
-        "dynamodb:Scan"
-      ],
-      Resource = aws_dynamodb_table.telegram_users.arn
-    }]
-  })
-}
-
-resource "aws_iam_policy_attachment" "lambda_basic_execution" {
-  name       = "${var.project_name}-lambda-basic-execution"
-  roles      = [aws_iam_role.lambda_exec_role.name]
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}
-
-resource "aws_iam_policy_attachment" "lambda_dynamodb_read_attach" {
-  name       = "${var.project_name}-lambda-dynamodb-read-attach"
-  roles      = [aws_iam_role.lambda_exec_role.name]
-  policy_arn = aws_iam_policy.lambda_dynamodb_read.arn
-}
-
-resource "aws_lambda_function" "handler" {
-  function_name    = "${var.project_name}-lambda"
+# 2) BOT Lambda
+resource "aws_lambda_function" "bot_handler" {
+  function_name    = "${var.project_name}-bot-lambda"
   runtime          = "python3.11"
   handler          = "lambda_function.lambda_handler"
-  role             = aws_iam_role.lambda_exec_role.arn
-  filename         = "function.zip" # Upload this ZIP file before apply
-  source_code_hash = filebase64sha256("function.zip")
+  role             = aws_iam_role.bot_lambda_role.arn
+  filename         = "bot_lambda_function.zip"
+  source_code_hash = filebase64sha256("bot_lambda_function.zip")
 
   environment {
     variables = {
-      DDB_TABLE = aws_dynamodb_table.telegram_users.name
+      TELEGRAM_TOKEN = var.telegram_token
+    }
+  }
+
+  layers      = [aws_lambda_layer_version.telegram_bot_deps.arn]
+  memory_size = 512
+  timeout     = 10
+}
+
+# 3) BOT Function URL (public, no auth)
+resource "aws_lambda_function_url" "bot_url" {
+  function_name      = aws_lambda_function.bot_handler.function_name
+  authorization_type = "NONE"
+}
+
+resource "aws_lambda_permission" "bot_url_invoke" {
+  statement_id          = "AllowPublicInvokeBot"
+  action                = "lambda:InvokeFunctionUrl"
+  function_name         = aws_lambda_function.bot_handler.function_name
+  principal             = "*"
+  function_url_auth_type = "NONE"
+}
+
+# 4) REST Lambda
+resource "aws_lambda_function" "rest_handler" {
+  function_name    = "${var.project_name}-rest-lambda"
+  runtime          = "python3.11"
+  handler          = "lambda_function.lambda_handler"
+  role             = aws_iam_role.rest_lambda_role.arn
+  filename         = "rest_lambda_function.zip"
+  source_code_hash = filebase64sha256("rest_lambda_function.zip")
+
+  environment {
+    variables = {
+      TABLE_LOC = aws_dynamodb_table.locations.name
     }
   }
 }
 
-resource "aws_apigatewayv2_api" "api" {
-  name          = "${var.project_name}-api"
-  protocol_type = "HTTP"
+# 5) REST Function URL (public, no auth)
+resource "aws_lambda_function_url" "rest_url" {
+  function_name      = aws_lambda_function.rest_handler.function_name
+  authorization_type = "NONE"
 }
 
-resource "aws_apigatewayv2_integration" "lambda" {
-  api_id                 = aws_apigatewayv2_api.api.id
-  integration_type       = "AWS_PROXY"
-  integration_uri        = aws_lambda_function.handler.invoke_arn
-  integration_method     = "POST"
-  payload_format_version = "2.0"
+resource "aws_lambda_permission" "rest_url_invoke" {
+  statement_id          = "AllowPublicInvokeRest"
+  action                = "lambda:InvokeFunctionUrl"
+  function_name         = aws_lambda_function.rest_handler.function_name
+  principal             = "*"
+  function_url_auth_type = "NONE"
 }
 
-resource "aws_apigatewayv2_route" "default" {
-  api_id    = aws_apigatewayv2_api.api.id
-  route_key = "ANY /{proxy+}"
-  target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+# 6) Expose URLs as outputs
+output "bot_function_url" {
+  description = "Invoke URL for the Telegram-bot Lambda"
+  value       = aws_lambda_function_url.bot_url.function_url
 }
 
-resource "aws_apigatewayv2_stage" "default" {
-  api_id      = aws_apigatewayv2_api.api.id
-  name        = "$default"
-  auto_deploy = true
-}
-
-resource "aws_lambda_permission" "apigw" {
-  statement_id  = "AllowExecutionFromAPIGateway"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.handler.function_name
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.api.execution_arn}/*/*"
+output "rest_function_url" {
+  description = "Invoke URL for the REST Lambda"
+  value       = aws_lambda_function_url.rest_url.function_url
 }
