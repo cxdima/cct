@@ -1,6 +1,6 @@
 # Chakra CCT
 
-This repository contains the infrastructure and Lambda code for the **Chakra CCT** project. The game is developed for the Twitch streamer **ChakraLounge** and is inspired by classic mafia style table games. Team captains interact with the game through a Telegram bot while the backend runs entirely on AWS.
+This repository contains the infrastructure and Lambda code for the **Chakra CCT** project. The game is developed for the Twitch streamer **ChakraLounge** and is made specifically for the classic mafia game. Team captains interact with the game through a Telegram bot while the backend runs entirely on AWS.
 
 ## Repository layout
 
