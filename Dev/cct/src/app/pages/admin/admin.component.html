@@ -1,0 +1,124 @@
+<div class="container-fluid p-0">
+  <div class="row g-0 min-vh-100">
+    <div class="col-lg-6 d-none d-lg-block login-image"></div>
+
+    <div
+      class="col-12 col-lg-6 d-flex align-items-center justify-content-center login-bg position-relative"
+    >
+      <!-- top-right icon buttons -->
+      <div class="position-absolute top-0 end-0 m-3 d-flex gap-2">
+        <!-- theme dropdown -->
+        <div class="dropdown">
+          <button
+            class="icon-btn"
+            type="button"
+            id="themeDropdown"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            <i class="bi bi-sun"></i>
+          </button>
+          <ul
+            class="dropdown-menu dropdown-menu-end"
+            aria-labelledby="themeDropdown"
+          >
+            <li>
+              <button class="dropdown-item" type="button">Light</button>
+            </li>
+            <li>
+              <button class="dropdown-item" type="button">Dark</button>
+            </li>
+          </ul>
+        </div>
+
+        <!-- language dropdown -->
+        <div class="dropdown">
+          <button
+            class="icon-btn"
+            type="button"
+            id="langDropdown"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            <i class="bi bi-globe"></i>
+          </button>
+          <ul
+            class="dropdown-menu dropdown-menu-end"
+            aria-labelledby="langDropdown"
+          >
+            <li>
+              <button class="dropdown-item" type="button"
+              >🇺🇦 Ukrainian</button
+              >
+            </li>
+            <li>
+              <button class="dropdown-item" type="button"
+              >🇷🇺 Russian</button
+              >
+            </li>
+            <li>
+              <button class="dropdown-item" type="button"
+              >🇬🇧 English</button
+              >
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="login-form-wrapper">
+        <h1 class="mb-4">Login</h1>
+
+        <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
+          <div class="form-floating mb-3">
+            <input
+              id="username"
+              type="text"
+              class="form-control"
+              formControlName="username"
+              placeholder="Username"
+            />
+            <label for="username">Username</label>
+          </div>
+
+          <div class="form-floating mb-3">
+            <input
+              id="password"
+              type="password"
+              class="form-control"
+              formControlName="password"
+              placeholder="Password"
+            />
+            <label for="password">Password</label>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="form-check">
+              <input
+                id="remember"
+                type="checkbox"
+                class="form-check-input"
+                formControlName="remember"
+              />
+              <label for="remember" class="form-check-label"
+              >Remember me</label
+              >
+            </div>
+            <a href="#" class="link-primary">Forgot password?</a>
+          </div>
+
+          <button
+            type="submit"
+            class="btn btn-primary w-100 mt-3"
+            [disabled]="loginForm.invalid"
+          >
+            Login
+          </button>
+        </form>
+
+        <div class="text-center mt-5 small text-muted">
+          &copy; 2025 Chakra’s CCT 2
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

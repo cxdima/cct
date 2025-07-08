@@ -1,0 +1,19 @@
+<div class="controls">
+  <button (click)="toggleCapture()">
+    {{ capturing ? 'Stop Capturing' : 'Start Capturing' }}
+  </button>
+</div>
+
+<div class="map-wrapper">
+  <div #mapContainer class="map-container"></div>
+  <div class="zoom-controls">
+    <button (click)="zoomIn()"  [disabled]="!canZoomIn" aria-label="Zoom In">＋</button>
+    <button (click)="zoomOut()" [disabled]="!canZoomOut" aria-label="Zoom Out">－</button>
+  </div>
+</div>
+
+<div class="captured-list" *ngIf="capturing">
+  <h3>Captured Locations</h3>
+  <pre>{{ captured | json }}</pre>
+  <p>Copy this JSON into your LOCATIONS array.</p>
+</div>

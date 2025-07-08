@@ -1,0 +1,48 @@
+<div class="container my-4">
+  <div class="table-responsive">
+    <table class="table table-striped table-bordered table-hover text-center align-middle">
+      <thead>
+      <tr>
+        <th rowspan="2">#</th>
+        <th rowspan="2">Игрок</th>
+        <th rowspan="2">Б</th>
+        <th colspan="4">Доп. баллы</th>
+        <th rowspan="2">Ci</th>
+        <th rowspan="2">П</th>
+        <th rowspan="2">У</th>
+        <th rowspan="2">И</th>
+        <th colspan="4">Роли</th>
+      </tr>
+      <tr>
+        <th>Σ</th>
+        <th>+</th>
+        <th>−</th>
+        <th>Лх</th>
+        <th>Мир.</th>
+        <th>Шер.</th>
+        <th>Маф.</th>
+        <th>Дон</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let p of leaderboard">
+        <td>{{ p.place }}</td>
+        <td class="fw-bold">{{ p.name }}</td>
+        <td>{{ p.totalPoints.toFixed(1) }}</td>
+        <td>{{ p.netAdj.toFixed(1) }}</td>
+        <td>{{ p.plus.toFixed(1) }}</td>
+        <td>{{ p.minus.toFixed(1) }}</td>
+        <td>{{ p.bm }}</td>
+        <td>{{ p.comp }}</td>
+        <td>{{ p.wins }}</td>
+        <td>{{ p.firstBloods }}</td>
+        <td>{{ p.games }}</td>
+        <td>{{ p.role1Total ? (p.role1Wins + '/' + p.role1Total) : '-' }}</td>
+        <td>{{ p.role2Total ? (p.role2Wins + '/' + p.role2Total) : '-' }}</td>
+        <td>{{ p.role3Total ? (p.role3Wins + '/' + p.role3Total) : '-' }}</td>
+        <td>{{ p.role4Total ? (p.role4Wins + '/' + p.role4Total) : '-' }}</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
