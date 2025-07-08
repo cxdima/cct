@@ -1,0 +1,7 @@
+version: 0.2
+phases:
+  build:
+    commands:
+      - echo "Build step skipped, handled by CodeDeploy"
+artifacts:
+  files: "**/*"
